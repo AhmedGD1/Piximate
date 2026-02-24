@@ -1,0 +1,12 @@
+{
+    "name": "PixelCut.Editor",
+    "rootNamespace": "PixelCut",
+    "references": [
+        "PixelCut.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "autoReferenced": false
+}

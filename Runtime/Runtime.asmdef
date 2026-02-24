@@ -1,0 +1,8 @@
+{
+    "name": "PixelCut.Runtime",
+    "rootNamespace": "PixelCut",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "autoReferenced": true
+}

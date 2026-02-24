@@ -1,0 +1,21 @@
+{
+  "name": "com.pixelcut.piximate",
+  "version": "1.0.0",
+  "displayName": "Piximate",
+  "description": "A lightweight sprite animation system for Unity featuring a runtime animator component, a ScriptableObject-based animation clip format, and a custom Editor window for building and previewing clips.",
+  "unity": "2021.3",
+  "unityRelease": "0f1",
+  "documentationUrl": "https://github.com/AhmedGD1/Piximate#readme",
+  "keywords": [
+    "sprite",
+    "animation",
+    "2d",
+    "pixel art",
+    "animator"
+  ],
+  "author": {
+    "name": "Ahmed_GD",
+    "email": "aag75yssar@gmail.com",
+    "url": "https://github.com/AhmedGD1"
+  }
+}
