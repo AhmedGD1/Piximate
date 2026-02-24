@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Piximate
 {
-    [CreateAssetMenu(fileName = "AnimClip", menuName = "PixelCut/Animation Clip")]
+    [CreateAssetMenu(fileName = "AnimClip", menuName = "Piximate/Animation Clip")]
     public class AnimClip : ScriptableObject
     {
         public Sprite[] Frames    => frames;
