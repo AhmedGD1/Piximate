@@ -52,7 +52,7 @@ namespace Piximate.Editor
         static readonly Color C_TEXT    = new Color(0.88f,  0.88f,  0.90f);
         static readonly Color C_MUTED   = new Color(0.50f,  0.50f,  0.54f);
 
-        [MenuItem("Window/PixelCut/Anim Clip Editor")]
+        [MenuItem("Window/Piximate/Anim Clip Editor")]
         public static void Open()
         {
             var w = GetWindow<Pixiditor>("Anim Clip Editor");
