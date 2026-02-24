@@ -33,19 +33,37 @@ Download it then paste it in the asset folder
 **With the Pixiditor editor window:**
 
 1. Open **Window → Piximate → Anim Clip Editor**.
+
+<img width="519" height="577" alt="image" src="https://github.com/user-attachments/assets/32dd118f-0fa0-4739-a983-a4cf941f8a95" />
+
 2. Drag your sprites into the **Frames** drop zone (or use the object-picker cells).
+
+<img width="382" height="626" alt="image" src="https://github.com/user-attachments/assets/f0474e68-49d4-4cbd-bee7-d16e455deaba" />
+
 3. Set a **Clip Name**, **Frame Rate**, and whether it should **Loop**.
+
 4. Choose a save folder and press **Save AnimClip Asset**.
+
+<img width="362" height="156" alt="image" src="https://github.com/user-attachments/assets/dc2c2ef6-4080-4dbf-a866-87f1302aeaec" />
+
 
 **Manually:**
 
 Right-click in the Project window and choose **Create → Piximate → Animation Clip**.
 
+<img width="752" height="220" alt="image" src="https://github.com/user-attachments/assets/67c1d15f-844b-4599-9e33-bbd7ef763e4d" />
+
 ### 2 — Add a Piximator to your GameObject
 
 1. Attach the `Piximator` component to any GameObject that has a `SpriteRenderer`.
+
+<img width="229" height="196" alt="image" src="https://github.com/user-attachments/assets/f56d2566-4862-4953-af2c-c5f86635bd69" />
+
+
 2. Assign the `SpriteRenderer` reference in the Inspector.
 3. Add one or more `AnimClip` assets to the **Anim Clips** list.
+
+<img width="438" height="187" alt="image" src="https://github.com/user-attachments/assets/1c30ca70-1d63-484e-9392-f29271b8c585" />
 
 ### 3 — Play clips from code
 
@@ -137,3 +155,4 @@ Open via **Window → PixelCut → Anim Clip Editor**.
 - The `Piximator` component requires a `SpriteRenderer` on the same GameObject or assigned manually in the Inspector.
 
 ---
+
