@@ -13,8 +13,9 @@ namespace Piximate.Editor
         private bool     loop           = true;
         private Sprite[] frames         = new Sprite[0];
 
-        private bool   isPreviewing = false;
-        private int    previewFrame = 0;
+        private bool isPreviewing    = false;
+        private bool playBackwards   = false;
+        private int  previewFrame    = 0;
         private double lastFrameTime;
         private double previewTimer;
 
@@ -100,9 +101,20 @@ namespace Piximate.Editor
             if (previewTimer >= dur)
             {
                 previewTimer -= dur;
-                previewFrame++;
-                if (previewFrame >= frames.Length)
-                    previewFrame = loop ? 0 : frames.Length - 1;
+
+                if (playBackwards)
+                {
+                    previewFrame--;
+                    if (previewFrame < 0)
+                        previewFrame = loop ? frames.Length - 1 : 0;
+                }
+                else
+                {
+                    previewFrame++;
+                    if (previewFrame >= frames.Length)
+                        previewFrame = loop ? 0 : frames.Length - 1;
+                }
+
                 Repaint();
             }
         }
@@ -255,31 +267,62 @@ namespace Piximate.Editor
 
                 GUILayout.FlexibleSpace();
 
-                bool playing = isPreviewing && hasFrames;
-
+                // Step back
                 Btn("◀◀", C_SURFACE, hasFrames ? C_TEXT : C_MUTED, 30, 28, () => {
                     if (hasFrames) { isPreviewing = false; previewFrame = (previewFrame - 1 + frames.Length) % frames.Length; }
                 });
                 Sp(3);
 
-                Btn(playing ? "||" : "▶", playing ? C_WARN : C_ACCENT, C_BG, 44, 28, () => {
+                // Play backwards
+                bool playingBack = isPreviewing && playBackwards && hasFrames;
+                Btn("◀", playingBack ? C_WARN : C_SURFACE, playingBack ? C_BG : (hasFrames ? C_TEXT : C_MUTED), 32, 28, () => {
                     if (!hasFrames) return;
-                    if (!isPreviewing) { isPreviewing = true; lastFrameTime = EditorApplication.timeSinceStartup; previewTimer = 0; }
-                    else isPreviewing = false;
+                    if (!isPreviewing || !playBackwards)
+                    {
+                        playBackwards = true;
+                        isPreviewing  = true;
+                        lastFrameTime = EditorApplication.timeSinceStartup;
+                        previewTimer  = 0;
+                    }
+                    else
+                    {
+                        isPreviewing = false;
+                    }
                 });
                 Sp(3);
 
-                Btn("■", C_SURFACE, C_DANGER, 30, 28, () =>
-                    { isPreviewing = false; previewFrame = 0; previewTimer = 0; });
+                // Play forwards / pause
+                bool playingFwd = isPreviewing && !playBackwards && hasFrames;
+                Btn(playingFwd ? "||" : "▶", playingFwd ? C_WARN : C_ACCENT, C_BG, 44, 28, () => {
+                    if (!hasFrames) return;
+                    if (!isPreviewing || playBackwards)
+                    {
+                        playBackwards = false;
+                        isPreviewing  = true;
+                        lastFrameTime = EditorApplication.timeSinceStartup;
+                        previewTimer  = 0;
+                    }
+                    else
+                    {
+                        isPreviewing = false;
+                    }
+                });
                 Sp(3);
 
+                // Stop
+                Btn("■", C_SURFACE, C_DANGER, 30, 28, () =>
+                    { isPreviewing = false; previewFrame = 0; previewTimer = 0; playBackwards = false; });
+                Sp(3);
+
+                // Step forward
                 Btn("▶▶", C_SURFACE, hasFrames ? C_TEXT : C_MUTED, 30, 28, () => {
                     if (hasFrames) { isPreviewing = false; previewFrame = (previewFrame + 1) % frames.Length; }
                 });
 
                 GUILayout.FlexibleSpace();
 
-                GUILayout.Label($"{frameRate:0.#} fps", _fpsStyle, GUILayout.Width(46));
+                string dirLabel = playBackwards ? "▼" : "▲";
+                GUILayout.Label($"{dirLabel} {frameRate:0.#} fps", _fpsStyle, GUILayout.Width(56));
             }
 
             Sp(7);
@@ -525,6 +568,7 @@ namespace Piximate.Editor
             loop           = true;
             frames         = new Sprite[0];
             isPreviewing   = false;
+            playBackwards  = false;
             previewFrame   = 0;
             previewTimer   = 0;
             RebuildProxy();
@@ -580,12 +624,21 @@ namespace Piximate.Editor
             DrawBorder(inner, new Color(c.r, c.g, c.b, c.a * 0.25f));
         }
 
+        // Fix: Unity's textureRect uses bottom-left origin, but GUI uses top-left.
+        // We must flip the Y coordinate when converting to UV space.
         static void DrawSpriteFit(Rect canvas, Sprite s, float padding)
         {
             Texture2D tex = s.texture;
             Rect      sr  = s.textureRect;
-            var uv = new Rect(sr.x / tex.width, sr.y / tex.height,
-                              sr.width / tex.width, sr.height / tex.height);
+
+            float uvX = sr.x / tex.width;
+            float uvY = sr.y / tex.height;           // bottom of sprite in texture
+            float uvW = sr.width  / tex.width;
+            float uvH = sr.height / tex.height;
+
+            // GUI.DrawTextureWithTexCoords expects UVs in bottom-left origin space,
+            // so no flip needed — but the rect must be constructed correctly.
+            var uv = new Rect(uvX, uvY, uvW, uvH);
 
             float aspect = sr.width / sr.height;
             float maxW   = canvas.width  - padding * 2;
@@ -594,10 +647,15 @@ namespace Piximate.Editor
             float drawH  = drawW / aspect;
             if (drawH > maxH) { drawH = maxH; drawW = drawH * aspect; }
 
+            // Round to nearest pixel to avoid sub-pixel blurring on pixel art
+            drawW = Mathf.Round(drawW);
+            drawH = Mathf.Round(drawH);
+
             Rect dst = new Rect(
-                canvas.x + (canvas.width  - drawW) * 0.5f,
-                canvas.y + (canvas.height - drawH) * 0.5f,
+                Mathf.Round(canvas.x + (canvas.width  - drawW) * 0.5f),
+                Mathf.Round(canvas.y + (canvas.height - drawH) * 0.5f),
                 drawW, drawH);
+
             GUI.DrawTextureWithTexCoords(dst, tex, uv);
         }
 
@@ -665,6 +723,7 @@ namespace Piximate.Editor
             frames       = clip.Frames != null ? (Sprite[])clip.Frames.Clone() : new Sprite[0];
             previewFrame = 0;
             isPreviewing = false;
+            playBackwards = false;
             RebuildProxy();
             Repaint();
         }
