@@ -70,16 +70,20 @@ namespace Piximate
                 return;
             }
 
-            // Same clip — restart if non-looping, continue if looping
+            // Same clip — looping continues, non-looping always restarts
             if (currentClip == clip)
             {
-                if (!currentClip.Loop)
+                if (currentClip.Loop)
                 {
-                    currentFrame      = 0;
-                    timer             = 0f;
-                    animationFinished = false;
+                    playing = true;
+                    return;
                 }
-                playing = true;
+
+                currentFrame      = 0;
+                timer             = 0f;
+                animationFinished = false;
+                playing           = true;
+                UpdateSpriteRenderer(0);
                 return;
             }
 
