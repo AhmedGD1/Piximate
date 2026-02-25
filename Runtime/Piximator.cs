@@ -33,6 +33,7 @@ namespace Piximate
 
         private int currentFrame;
         private bool playing;
+        private bool animationFinished;
 
         private float timer;
 
@@ -44,26 +45,64 @@ namespace Piximate
                 RegisterClip(clip);
             }
         }
-        
-        public void Play(string animName) => Play(animName, false);
 
-        public void Play(string animName, bool forceReset)
+        public void Play(string animName = "")
         {
+            if (string.IsNullOrEmpty(animName))
+            {
+                // Resume current/last clip from current frame
+                if (currentClip != null)
+                {
+                    if (animationFinished)
+                    {
+                        currentFrame      = 0;
+                        timer             = 0f;
+                        animationFinished = false;
+                    }
+                    playing = true;
+                }
+                return;
+            }
+
             if (!clipMap.TryGetValue(animName, out var clip))
             {
                 Debug.LogWarning($"[SpriteAnimator] Clip not found: '{animName}' on {gameObject.name}");
                 return;
             }
 
-            AnimateClip(clip, forceReset);
+            // Same clip — restart if non-looping, continue if looping
+            if (currentClip == clip)
+            {
+                if (!currentClip.Loop)
+                {
+                    currentFrame      = 0;
+                    timer             = 0f;
+                    animationFinished = false;
+                }
+                playing = true;
+                return;
+            }
+
+            // New clip — always restart
+            currentClip       = clip;
+            currentFrame      = 0;
+            timer             = 0f;
+            animationFinished = false;
+            playing           = true;
+            UpdateSpriteRenderer(0);
+        }
+
+        public void PlayBackwards(string animName = "")
+        {
+            Play(animName);
+            playbackSpeed = -Mathf.Abs(playbackSpeed);
         }
 
         public void Stop()
         {
-            currentClip  = null;
-            currentFrame = 0;
-            timer        = 0f;
-            playing      = false;
+            playing          = false;
+            animationFinished = false;
+            // Frame and clip intentionally preserved so Play() can resume
         }
 
         public void SetPlaybackSpeed(float speed)
@@ -94,38 +133,27 @@ namespace Piximate
 
         private void Update()
         {
-            if (currentClip == null || currentClip.Frames.Length == 0) 
+            if (!playing || currentClip == null || currentClip.Frames.Length == 0)
                 return;
 
             timer += Time.deltaTime * playbackSpeed;
+            float frameDuration = 1f / currentClip.FrameRate;
 
-            if (timer >= 1f / currentClip.FrameRate)
+            if (Mathf.Abs(timer) >= frameDuration)
             {
-                timer -= 1f / currentClip.FrameRate;
-                currentFrame++;
+                timer -= Mathf.Sign(timer) * frameDuration;
+                currentFrame += playbackSpeed > 0 ? 1 : -1;
 
-
-                if (currentFrame >= currentClip.Frames.Length)
+                if (currentFrame >= currentClip.Frames.Length || currentFrame < 0)
                 {
-                    UpdateSpriteRenderer(currentClip.Loop ? 0 : currentClip.Frames.Length - 1);
+                    int boundaryFrame = playbackSpeed > 0 ? currentClip.Frames.Length - 1 : 0;
+                    UpdateSpriteRenderer(currentClip.Loop ? (playbackSpeed > 0 ? 0 : currentClip.Frames.Length - 1) : boundaryFrame);
                     CallEvents(currentClip.name, currentClip.Loop);
                     return;
                 }
 
                 UpdateSpriteRenderer(currentFrame);
             }
-        }
-
-        private void AnimateClip(AnimClip clip, bool forceReset)
-        {
-            if (currentClip == clip && !forceReset) return;
-            if (clip == null || clip.Frames.Length == 0) return;
-
-            currentFrame = 0;
-            currentClip  = clip;
-            timer        = 0f;
-            playing      = true;
-            UpdateSpriteRenderer(0);
         }
 
         private void CallEvents(string clipName, bool loop)
@@ -136,17 +164,16 @@ namespace Piximate
                 return;
             }
 
+            animationFinished = true;
+            playing           = false;
             AnimationFinished?.Invoke(clipName);
-            Stop();
         }
 
         private void UpdateSpriteRenderer(int frame)
         {
-            currentFrame = frame;
+            currentFrame          = frame;
             spriteRenderer.sprite = currentClip.Frames[currentFrame];
             FrameChanged?.Invoke(currentFrame);
         }
     }
 }
-
-
