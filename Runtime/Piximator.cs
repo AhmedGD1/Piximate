@@ -45,9 +45,7 @@ namespace Piximate
             }
         }
 
-        public void Play(string animName) => Play(animName, false);
-
-        public void Play(string animName, bool forceReset)
+        public void Play(string animName)
         {
             if (!clipMap.TryGetValue(animName, out var clip))
             {
@@ -55,7 +53,7 @@ namespace Piximate
                 return;
             }
 
-            AnimateClip(clip, forceReset);
+            AnimateClip(clip, !clip.Loop);
         }
 
         public void Stop()
@@ -118,7 +116,7 @@ namespace Piximate
 
         private void AnimateClip(AnimClip clip, bool forceReset)
         {
-            if (currentClip == clip && !forceReset) return;
+            if (forceReset) return;
             if (clip == null || clip.Frames.Length == 0) return;
 
             currentFrame = 0;
@@ -148,3 +146,4 @@ namespace Piximate
         }
     }
 }
+
